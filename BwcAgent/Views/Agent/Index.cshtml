@@ -1,0 +1,141 @@
+﻿@model IEnumerable<BwcAgent.Models.Agent>
+@{
+    ViewData["Title"] = "Agent Manager";
+}
+<link href="~/lib/bootstrap/dist/css/bootstrap.css" rel="stylesheet" />
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.8.0/js/bootstrap-datepicker.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.8.0/css/bootstrap-datepicker.css" rel="stylesheet">
+
+
+<h2>Agent Manager</h2>
+<br />
+<div>
+    <div style="float:left">
+        <button class="btn btn-primary" onclick="AddEditAgent(0)">Add Agent</button>
+        <button class="btn btn-success" onclick="ReportAgent()">Agent Report</button>
+    </div>
+    <div style="float:right; width:40%;">
+        <form asp-controller="Agent" asp-action="Index" class="form-group">
+            <div class="col-sm-6">
+                <input class="form-control" type="text" name="SearchString" placeholder="Search">
+            </div>
+            <button type="submit" class="btn btn-default btn-info">Filter</button>
+        </form>
+    </div>
+</div>
+<br />
+<br />
+<table class="table">
+    <thead>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.Id)</th>
+            <th>@Html.DisplayNameFor(model => model.Name)</th>
+            <th>@Html.DisplayNameFor(model => model.DateFrom)</th>
+            <th>@Html.DisplayNameFor(model => model.DateTo)</th>
+            <th>@Html.DisplayNameFor(model => model.Remark)</th>
+            <th>Action Item</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@Html.DisplayFor(modelItem => item.Id)</td>
+                <td>@Html.DisplayFor(modelItem => item.Name)</td>
+                <td>@Html.DisplayFor(modelItem => item.DateFrom)</td>
+                <td>@Html.DisplayFor(modelItem => item.DateTo)</td>
+                <td>@Html.DisplayFor(modelItem => item.Remark)</td>
+                <td>
+                    <button class="btn btn-default" onclick="AddEditAgent(@item.Id)">Edit</button>
+                    <button class="btn btn-danger" onclick="DeleteAgent(@item.Id)">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<div class="modal fade" id="agentFormModel" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">×</a>
+                <h3 id="title" class="modal-title">Add Agent</h3>
+            </div>
+            <div class="modal-body" id="agentFormModelDiv">
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="agentReportModal" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">×</a>
+                <h3 class="modal-title">Agent Report</h3>
+            </div>
+            <div class="modal-body" id="agentReportModalDiv">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var AddEditAgent = function (agentId) {
+        var url = "/Agent/AddEditAgent?agentId=" + agentId;
+        if (agentId > 0) {
+            $('#title').html("Edit Agent");
+        } else {
+            $('#title').html("Add Agent");
+        }
+            
+        $("#agentFormModelDiv").load(url, function () {
+            $("#agentFormModel").modal("show");
+        });
+        $('#agentFormModel').on('shown.bs.modal', function () {
+            $('#calender-container .input-group.date').datepicker({
+                todayBtn: true,
+                calendarWeeks: true,
+                todayHighlight: true,
+                autoclose: true,
+                container: '#agentFormModel modal-body'
+            });
+        });
+    }
+    var ReportAgent = function () {
+        var url = "/Agent/AgentSummary";
+        $("#agentReportModalDiv").load(url, function () {
+            $("#agentReportModal").modal("show");
+        })
+    }
+    var DeleteAgent = function (itemId) {
+        var ans = confirm("Do you want to delete item with Item Id: " + itemId);
+        if (ans) {
+            $.ajax({
+                type: "POST",
+                url: "/Agent/Delete/" + itemId,
+                success: function () {
+                    window.location.href = "/Agent/Index";
+                }
+            })
+        }
+    }
+</script>
+
+<script>
+    $('body').on('click', "#btnSubmit", function () {
+        var myformdata = $("#agentForm").serialize();
+        $.ajax({
+            type: "POST",
+            url: "/Agent/Create",
+            data: myformdata,
+            success: function () {
+                $("#myModal").modal("hide");
+                window.location.href = "/Agent/Index";
+            },
+            error: function (errormessage) {
+                alert(errormessage.responseText);
+            }
+        })
+    })
+</script>
